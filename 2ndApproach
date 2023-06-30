@@ -1,4 +1,5 @@
 clc
+clear all
 close all
 [x,Fs] = audioread('sampleAudio.mp3');
 targetFs = 8000;
@@ -8,7 +9,7 @@ noisePwr= 0.25;
 whiteNoise = noisePwr * rand(size(sampledAudio));
 whitenoiseadded = sampledAudio + whiteNoise;
 audiowrite('whiteSound.wav', whitenoiseadded, targetFs);
-fc = 1000;
-[b,a] = butter(8,fc/(targetFs/2),'low');
+fc = 850;
+[b,a] = cheby1(4,1,fc/(targetFs/2),'low');
 filteredSound = filter(b,a,whitenoiseadded);
 soundsc(filteredSound,targetFs);
