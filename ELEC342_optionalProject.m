@@ -1,6 +1,9 @@
 %Aydin Azari Farhad - Summer 2023
 %All rights reserved
 %ELEC 372 - Concordia University
+clear all;
+close all;
+clc;
 inputFile = 'G:\My Documents\MATLAB\sampleAudio.mp3';
 [audio,fs] = audioread(inputFile);
 targetFs = 8000;
@@ -14,18 +17,22 @@ noisePwr = 5.01;
 noisy = audio + noise * noisePwr;
 audio_fft = fft(audio);
 noisy_fft = fft(noisy);
-soundsc(noisy,targetFs);
+% soundsc(noisy,targetFs);
 figure;
-subplot(5,1,1);
+subplot(6,1,1);
 plot(linspace(0, length(audio)/targetFs, length(audio)),audio);
-subplot(5,1,2);
+subplot(6,1,2);
 plot(linspace(0, length(audio)/targetFs, length(audio)),noisy);
-subplot(5,1,3);
+subplot(6,1,3);
 plot(abs(audio_fft));
-subplot(5,1,4);
+subplot(6,1,4);
 plot(abs(noisy_fft));
-subplot(5,1,5);
+subplot(6,1,5);
 plot(abs(noisy_fft - audio_fft));
 
-
+[b,a] = butter(2,0.25*10^5,'low');
+y1 = filter(b,a,noisy);
+soundsc(y1,targetFs)
+subplot(6,1,6);
+plot(abs(fft(y1)));
 
