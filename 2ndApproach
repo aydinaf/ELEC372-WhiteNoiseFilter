@@ -1,0 +1,14 @@
+clc
+close all
+[x,Fs] = audioread('sampleAudio.mp3');
+targetFs = 8000;
+sampledAudio = resample(x,targetFs,Fs);
+audiowrite('resampled.wav',sampledAudio,targetFs);
+noisePwr= 0.25;
+whiteNoise = noisePwr * rand(size(sampledAudio));
+whitenoiseadded = sampledAudio + whiteNoise;
+audiowrite('whiteSound.wav', whitenoiseadded, targetFs);
+fc = 1000;
+[b,a] = butter(8,fc/(targetFs/2),'low');
+filteredSound = filter(b,a,whitenoiseadded);
+soundsc(filteredSound,targetFs);
