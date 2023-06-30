@@ -13,7 +13,7 @@ numSamples = duration * targetFs;
 audio = audio(1:numSamples);
 noise = rand(size(audio));
 noise = highpass(noise, 400, targetFs);
-noisePwr = 5.01;
+noisePwr = 1.01;
 noisy = audio + noise * noisePwr;
 audio_fft = fft(audio);
 noisy_fft = fft(noisy);
@@ -30,7 +30,7 @@ plot(abs(noisy_fft));
 subplot(6,1,5);
 plot(abs(noisy_fft - audio_fft));
 
-[b,a] = butter(2,0.25*10^5,'low');
+[b,a] = butter(6,3500/targetFs/2,'low');
 y1 = filter(b,a,noisy);
 soundsc(y1,targetFs)
 subplot(6,1,6);
