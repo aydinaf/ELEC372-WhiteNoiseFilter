@@ -1,3 +1,6 @@
+%Aydin Azari Farhad - Summer 2023
+%All rights reserved
+%ELEC 372 - Concordia University
 inputFile = 'G:\My Documents\MATLAB\sampleAudio.mp3';
 [audio,fs] = audioread(inputFile);
 targetFs = 8000;
