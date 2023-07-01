@@ -1,21 +1,186 @@
-clc
-clear all
-close all
-[x,Fs] = audioread('sampleAudio.mp3');
-targetFs = 8000;
-sampledAudio = resample(x,targetFs,Fs);
-subplot(3,1,1);
-plot(linspace(0, length(sampledAudio)/targetFs, length(sampledAudio)),sampledAudio);
-audiowrite('resampled.wav',sampledAudio,targetFs);
-noisePwr= 0.5;
-whiteNoise = noisePwr * rand(size(sampledAudio));
-whitenoiseadded = sampledAudio + whiteNoise;
-subplot(3,1,2);
-plot(linspace(0, length(sampledAudio)/targetFs, length(sampledAudio)),whitenoiseadded);
-audiowrite('whiteSound.wav', whitenoiseadded, targetFs);
+% Aydin Azari Farhad
+% ELEC 342 - Summer 2023
+% Presented to Dr. Soleymani
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%clearing workspace
+clc;
+clear all;
+close all;
+
+% importing clean audio file
+[audio,Fs] = audioread('input.wav'); % 8k samples per sec, 1 min long
+
+% setting cut-off frequency of the lowpass filter
 fc = 1200;
-[b,a] = butter(1,fc/(targetFs/2),'low');
-filteredSound = filter(b,a,whitenoiseadded);
-subplot(3,1,3);
-plot(linspace(0, length(sampledAudio)/targetFs, length(sampledAudio)),filteredSound);
-soundsc(filteredSound,targetFs);
+
+while true
+    
+    % setting signal to noise ratio for the white noise (typical 25)
+    snr = input('please enter a signal to noise ratio (SNR), or -1 to exit: ');
+    if snr == -1
+        break;
+    end
+    close all;
+    figure;
+    
+    % Creading noisy signal by adding white guassian noise to clean audio
+    whitenoiseadded = awgn(audio, snr, 'measured');
+
+    % Extracting added noise component for demonstrative purposes
+    noise = whitenoiseadded - audio;
+
+    % plotting clean audio in time domain
+    subplot(8,1,1);
+    plot(audio);
+    title('Fig 1 : Original Audio in time domain');
+
+    % plotting audio with added noise in time domain
+    subplot(8,1,2);
+    plot(whitenoiseadded);
+    title('Fig 2 : Noisy Audio in time domain');
+
+    % plotting the noise signal in time domain
+    subplot(8,1,3);
+    plot(noise);
+    title('Fig 3 : Noise component in time domain');
+
+    % Computing the fft of the clean audio, noisy audio, and noise component
+    audioFFT = fft(audio);
+    noisyAudioFFT = fft(whitenoiseadded);
+    noiseFFT = fft(noise);
+
+    % extracting the number of individual sample points
+    N = length(audio);
+
+    % initializing the "single sided" frequency-axis for the FFT plots
+    w = (0:N/2-1)*(Fs/N);
+
+    %%%%%%%%%%%%%%%%%%%% Filter %%%%%%%%%%%%%%%%%%%%%
+    % creating an ideal brickwall lowpass filter (FIR)
+    %(this is possible because all data is known in advance)
+    
+    %creating a vector of ones,same size as our noisy audio
+    brickLowpassFilter = ones(size(noisyAudioFFT));
+    % setting a cutoff band for the lowpass brick filter.
+    % setting indexes representing frequencies where the signal should be surpressed to 0
+    brickLowpassFilter(((length(noisyAudioFFT)/Fs)*fc):(end-(length(noisyAudioFFT)/Fs)*fc)) = 0.00;
+    %multiplying the FFT of noisy signal by the created filter, in the frequency domain 
+        %and taking the inverse fast fourier transform to convert back to time domain.
+    outputAudio = real(ifft( brickLowpassFilter.*noisyAudioFFT));
+    
+    % Creating a butterworth filter (as an alternative option)
+    % [b,a] = butter(20,fc/(Fs/2),'low');
+    % outputAudio = (filter(b,a,whitenoiseadded));
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % plotting the magnitude spectrum of the clean audio signal
+    subplot(8,1,4);
+    plot(w,abs(audioFFT(1:N/2)));
+    title('Fig 4 : FFT of orignial audio');
+
+    % plotting the magnitude spectrum of the noisy audio signal
+    subplot(8,1,5);
+    plot(w,abs(noisyAudioFFT(1:N/2)));
+    title('Fig 5 : FFT of audio with added noise');
+
+    % plotting the magnitude spectrum of the noise component
+    subplot(8,1,6);
+    plot(w,abs(noiseFFT(1:N/2)));
+    title('Fig 6 : FFT Noise component');
+
+    % Plotting the output of the filter (filtered audio) in time domain
+    subplot(8,1,7);
+    plot(outputAudio);
+    title('Fig 7 : filtered audio in time domain');
+
+    % Plotting the magnitude spectrum of filtered audio
+    subplot(8,1,8);
+    outputAudioFFT = fft(outputAudio);
+    plot(w,abs(outputAudioFFT(1:N/2)));
+    title('Fig 8 : FFT of filtered audio');
+end
+% writing resulting noisy audio and filtered audio to .wav files
+audiowrite('recordingWithNoise.wav', whitenoiseadded, Fs);
+audiowrite('recordingFiltered.wav', outputAudio, Fs);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% pause
+% soundsc(audio,Fs);
+% pause
+% soundsc(filtered,Fs);
+
+% plot(linspace(0, length(audio)/Fs, length(audio)),audio);
+% 
+% subplot(6,1,2);
+% title('Original Audio');
+% plot(linspace(0, length(audio)/Fs, length(audio)),audio);
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% subplot(6,1,2);
+% audioFFT = fft(audio);
+% plot(abs());
+% title('ABS Original Audio FFT<<<<');
+% noisePwr= 0.05;
+% whiteNoiserand = noisePwr * rand(size(audio));
+% subplot(6,1,3);
+% plot(abs(fft(whiteNoiserand)));
+% title('ABS White Noise FFT Using RAND');
+% % whitenoiseadded = audio + whiteNoise;
+% snr = 5;
+% 
+% whitenoiseadded = awgn(audio, snr, 'measured');
+% subplot(6,1,4);
+% plot(abs(fft(whitenoiseadded)));
+% title('ABS White Noise Combined with original audio FFT');
+% subplot(6,1,5);
+% plot(whitenoiseadded);
+% title('ABS White Noise Combined with original audio');
+% 
+% % 
+% % % sampledAudio = resample(x,targetFs,Fs);
+% % subplot(4,1,1);
+% % plot(linspace(0, length(sampledAudio)/targetFs, length(sampledAudio)),sampledAudio);
+% % title('Original Audio');
+% % % audiowrite('resampled.wav',sampledAudio,targetFs);
+% % noisePwr= 0.05;
+% % whiteNoise = noisePwr * rand(size(sampledAudio));
+% % subplot(4,1,2);
+% % plot(abs(fft(whiteNoise)));
+% % title('White noise FFT');
+% % whitenoiseadded = sampledAudio + whiteNoise;
+% % subplot(4,1,3);
+% % plot(linspace(0, length(sampledAudio)/targetFs, length(sampledAudio)),whitenoiseadded);
+% % title('White Noise Added');
+% % audiowrite('whiteSound.wav', whitenoiseadded, targetFs);
+% % fc = 1000;
+% % [b,a] = butter(4,fc/(targetFs/2),'low');
+% % filteredSound = filter(b,a,whitenoiseadded);
+% % subplot(4,1,4);
+% % plot(linspace(0, length(sampledAudio)/targetFs, length(sampledAudio)),filteredSound);
+% % soundsc(filteredSound,targetFs);
+
